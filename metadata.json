@@ -1,0 +1,5 @@
+{
+  "name": "G+ CheckList",
+  "description": "Sistema profissional de checklist de veículos e ferramentas para frotas.",
+  "requestFramePermissions": ["camera"]
+}

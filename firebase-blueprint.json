@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the system, either an administrator or an employee.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "role": { "type": "string", "enum": ["admin", "employee"], "description": "User role" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "status": { "type": "string", "enum": ["active", "inactive"], "description": "Account status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["uid", "name", "email", "role", "status"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "A vehicle in the fleet.",
+      "type": "object",
+      "properties": {
+        "number": { "type": "string", "description": "Internal vehicle number" },
+        "model": { "type": "string", "description": "Vehicle model" },
+        "brand": { "type": "string", "description": "Vehicle brand" },
+        "plate": { "type": "string", "description": "License plate" },
+        "year": { "type": "number", "description": "Manufacturing year" },
+        "notes": { "type": "string", "description": "Additional notes" },
+        "status": { "type": "string", "enum": ["active", "maintenance", "inactive"], "description": "Vehicle status" }
+      },
+      "required": ["number", "model", "brand", "plate", "status"]
+    },
+    "Tool": {
+      "title": "Tool",
+      "description": "A standard tool to be checked.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the tool" },
+        "category": { "type": "string", "description": "Category of the tool" },
+        "standard": { "type": "boolean", "description": "Is it part of the standard checklist?" }
+      },
+      "required": ["name", "standard"]
+    },
+    "Checklist": {
+      "title": "Checklist",
+      "description": "A completed checklist record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who performed the checklist" },
+        "userName": { "type": "string", "description": "Name of the user" },
+        "vehicleId": { "type": "string", "description": "ID of the vehicle checked" },
+        "vehiclePlate": { "type": "string", "description": "Plate of the vehicle" },
+        "vehicleNumber": { "type": "string", "description": "Number of the vehicle" },
+        "date": { "type": "string", "format": "date-time", "description": "Date of the checklist" },
+        "vehicleItems": { "type": "object", "description": "Status of vehicle items (ok/problem)" },
+        "toolItems": { "type": "object", "description": "Status of tool items (present/missing)" },
+        "observations": { "type": "string", "description": "General observations" },
+        "photos": { "type": "array", "items": { "type": "string" }, "description": "URLs of photos taken" },
+        "status": { "type": "string", "enum": ["completed", "pending"], "description": "Checklist status" }
+      },
+      "required": ["userId", "vehicleId", "date", "status"]
+    },
+    "Refueling": {
+      "title": "Refueling",
+      "description": "A vehicle refueling record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User UID who registered" },
+        "date": { "type": "string", "format": "date-time" },
+        "vehicleId": { "type": "string" },
+        "vehiclePlate": { "type": "string" },
+        "vehicleModel": { "type": "string" },
+        "driverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "currentKm": { "type": "number" },
+        "previousKm": { "type": "number" },
+        "kmTraveled": { "type": "number" },
+        "liters": { "type": "number" },
+        "pricePerLiter": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "gasStation": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "consumption": { "type": "number" }
+      },
+      "required": ["vehicleId", "driverId", "currentKm", "liters", "pricePerLiter", "totalAmount"]
+    },
+    "OilChange": {
+      "title": "OilChange",
+      "description": "A vehicle oil change record.",
+      "type": "object",
+      "properties": {
+        "vehicleId": { "type": "string" },
+        "vehiclePlate": { "type": "string" },
+        "vehicleNumber": { "type": "string" },
+        "vehicleModel": { "type": "string" },
+        "driverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "currentKm": { "type": "number" },
+        "nextChangeKm": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "cost": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["vehicleId", "driverId", "currentKm", "nextChangeKm", "date", "userId", "userName"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Users collection"
+    },
+    "vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "Vehicles collection"
+    },
+    "tools/{toolId}": {
+      "schema": "Tool",
+      "description": "Tools collection"
+    },
+    "checklists/{checklistId}": {
+      "schema": "Checklist",
+      "description": "Checklists collection"
+    },
+    "refuelings/{refuelingId}": {
+      "schema": "Refueling",
+      "description": "Refuelings collection"
+    },
+    "oil_changes/{changeId}": {
+      "schema": "OilChange",
+      "description": "Oil changes collection"
+    }
+  }
+}

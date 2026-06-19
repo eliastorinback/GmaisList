@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        request.auth.token.email == "eliastorinback@gmail.com"); 
+    }
+
+    function isSupervisor() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
+    }
+
+    function isEmployee() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'employee';
+    }
+
+    // User validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role', 'status']) &&
+             data.uid is string &&
+             data.name is string &&
+             data.email is string &&
+             data.role in ['admin', 'supervisor', 'employee'] &&
+             data.status in ['active', 'inactive'];
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Allow read so login screen can query custom passwords.
+      allow read: if true;
+      allow create: if isAuthenticated() && (isAdmin() || isSupervisor() || isOwner(userId)); // Allow self-registration, admin, or supervisor
+      allow update: if isAuthenticated() && (isAdmin() || isSupervisor() || isOwner(userId));
+      allow delete: if isAdmin() || isSupervisor();
+    }
+
+    // Vehicles collection
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated(); // All authenticated users can see vehicles
+      allow write: if isAdmin(); // Only admins can manage vehicles
+    }
+
+    // Tools collection
+    match /tools/{toolId} {
+      allow read: if isAuthenticated(); // All authenticated users can see tools
+      allow write: if isAdmin(); // Only admins can manage tools
+    }
+
+    // Checklists collection
+    match /checklists/{checklistId} {
+      // Admins and supervisors can read all. Employees can read their own.
+      allow read: if isAdmin() || isSupervisor() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      // Employees can create checklists. Admins can create too.
+      allow create: if isAuthenticated() && 
+                    request.resource.data.userId == request.auth.uid;
+      // Admins and supervisors can update (e.g. status)
+      allow update: if isAdmin() || isSupervisor(); 
+      allow delete: if isAdmin();
+    }
+
+    // Refuelings collection
+    match /refuelings/{refuelingId} {
+      // Admins and supervisors can read all. Employees can read their own.
+      allow read: if isAdmin() || isSupervisor() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isSupervisor(); 
+      allow delete: if isAdmin() || isSupervisor();
+    }
+
+    // Legacy drivers collection
+    match /drivers/{driverId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isSupervisor();
+    }
+
+    // Oil changes collection
+    match /oil_changes/{changeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isSupervisor();
+      allow delete: if isAdmin() || isSupervisor();
+    }
+  }
+}
